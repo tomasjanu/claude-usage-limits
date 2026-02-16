@@ -30,8 +30,8 @@ code --install-extension claude-usage-limits-0.1.0.vsix
 
 ```bash
 # Clone the repository
-git clone <repository-url>
-cd vsc-claude-limits
+git clone https://github.com/tomasjanu/claude-usage-limits.git
+cd claude-usage-limits
 
 # Install dependencies
 npm install
@@ -40,10 +40,10 @@ npm install
 npm run compile
 
 # Package as .vsix
-npx @vscode/vsce package --allow-missing-repository
+npx @vscode/vsce package
 
 # Install in VS Code
-code --install-extension claude-usage-limits-0.1.0.vsix
+code --install-extension claude-usage-limits-0.1.3.vsix
 ```
 
 ## Authentication Setup
@@ -88,7 +88,7 @@ Open Command Palette (`Ctrl+Shift+P`):
 ### Project Structure
 
 ```
-vsc-claude-limits/
+claude-usage-limits/
 ├── src/
 │   ├── extension.ts    # Entry point, activation, polling
 │   ├── api.ts          # API client (OAuth + web cookie)
@@ -108,10 +108,10 @@ npm run compile
 npm run watch
 
 # Package as .vsix
-npx @vscode/vsce package --allow-missing-repository
+npx @vscode/vsce package
 
 # Install in VS Code
-code --install-extension claude-usage-limits-0.1.0.vsix
+code --install-extension claude-usage-limits-0.1.3.vsix
 ```
 
 ### Testing During Development
@@ -126,7 +126,7 @@ code --install-extension claude-usage-limits-0.1.0.vsix
 2. Compile and package:
    ```bash
    npm run compile
-   npx @vscode/vsce package --allow-missing-repository
+   npx @vscode/vsce package
    ```
 3. Install the new `.vsix`:
    ```bash
