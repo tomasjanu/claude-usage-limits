@@ -1,142 +1,142 @@
 # Claude Usage Limits - VS Code Extension
 
-Zobrazuje aktuální využití Claude.ai limitů přímo ve status baru VS Code.
+Displays your current Claude.ai usage limits directly in the VS Code status bar.
 
-![Status bar ukázka](https://img.shields.io/badge/☁_Claude:_5h_12%25_|_7d_35%25-blue?style=flat-square)
+![Status bar example](https://img.shields.io/badge/☁_Claude:_5h_12%25_|_7d_35%25-blue?style=flat-square)
 
-## Co zobrazuje
+## What It Shows
 
-- **5h** - využití aktuální 5hodinové session (%)
-- **7d** - týdenní využití všech modelů (%)
-- Barevné kódování: zelená (<50%), žlutá (50-80%), červená (>80%)
-- Tooltip s detailním přehledem (Sonnet, Opus, časy resetů)
+- **5h** - current 5-hour session usage (%)
+- **7d** - weekly usage across all models (%)
+- Color coding: green (<50%), yellow (50-80%), red (>80%)
+- Tooltip with detailed breakdown (Sonnet, Opus, reset times)
 
-## Instalace
+## Installation
 
-### Ze souboru .vsix (pro uživatele)
+### From .vsix file (for users)
 
-1. Stáhni soubor `claude-usage-limits-X.X.X.vsix`
-2. Otevři VS Code
-3. `Ctrl+Shift+X` (Extensions) → klikni na `...` vpravo nahoře → **"Install from VSIX..."**
-4. Vyber stažený `.vsix` soubor
-5. Restartuj VS Code (`Ctrl+Shift+P` → "Reload Window")
+1. Download the `claude-usage-limits-X.X.X.vsix` file
+2. Open VS Code
+3. `Ctrl+Shift+X` (Extensions) → click `...` in the top right → **"Install from VSIX..."**
+4. Select the downloaded `.vsix` file
+5. Restart VS Code (`Ctrl+Shift+P` → "Reload Window")
 
-Nebo přes terminál:
+Or via terminal:
 ```bash
 code --install-extension claude-usage-limits-0.1.0.vsix
 ```
 
-### Ze zdrojového kódu (pro vývojáře)
+### From source (for developers)
 
 ```bash
-# Naklonuj repozitář
-git clone <url-repozitare>
+# Clone the repository
+git clone <repository-url>
 cd vsc-claude-limits
 
-# Nainstaluj závislosti
+# Install dependencies
 npm install
 
-# Zkompiluj TypeScript
+# Compile TypeScript
 npm run compile
 
-# Zabal jako .vsix
+# Package as .vsix
 npx @vscode/vsce package --allow-missing-repository
 
-# Nainstaluj do VS Code
+# Install in VS Code
 code --install-extension claude-usage-limits-0.1.0.vsix
 ```
 
-## Nastavení autentizace
+## Authentication Setup
 
-Rozšíření potřebuje přístup k tvému Claude.ai účtu. Podporuje dva způsoby:
+The extension needs access to your Claude.ai account. Two methods are supported:
 
-### 1. Automatická detekce (výchozí)
+### 1. Automatic detection (default)
 
-Pokud máš nainstalovaný **Claude Code**, rozšíření automaticky najde OAuth token z `~/.claude/.credentials.json`. Nemusíš nic nastavovat.
+If you have **Claude Code** installed, the extension will automatically find the OAuth token from `~/.claude/.credentials.json`. No configuration needed.
 
-### 2. Session cookie z prohlížeče
+### 2. Session cookie from browser
 
-Pokud nemáš Claude Code nebo automatická detekce nefunguje:
+If you don't have Claude Code or automatic detection doesn't work:
 
-1. Otevři https://claude.ai a přihlas se
-2. Otevři DevTools (`F12`)
-3. Přejdi na **Application** → **Cookies** → `https://claude.ai`
-4. Najdi cookie `sessionKey` (začíná na `sk-ant-sid01-...`) a zkopíruj jeho hodnotu
-5. Ve VS Code: `Ctrl+Shift+P` → **"Claude Usage: Set Session Key"** → vlož hodnotu
+1. Open https://claude.ai and log in
+2. Open DevTools (`F12`)
+3. Go to **Application** → **Cookies** → `https://claude.ai`
+4. Find the `sessionKey` cookie (starts with `sk-ant-sid01-...`) and copy its value
+5. In VS Code: `Ctrl+Shift+P` → **"Claude Usage: Set Session Key"** → paste the value
 
-> **Poznámka:** Session cookie expiruje, takže ho občas budeš muset obnovit.
+> **Note:** The session cookie expires, so you may need to refresh it occasionally.
 
-## Nastavení rozšíření
+## Extension Settings
 
-Otevři Settings (`Ctrl+,`) a hledej "Claude Usage":
+Open Settings (`Ctrl+,`) and search for "Claude Usage":
 
-| Nastavení | Výchozí | Popis |
-|-----------|---------|-------|
-| `claudeUsage.authMethod` | `auto` | `auto` = OAuth + fallback na cookie, `cookie` = pouze cookie |
-| `claudeUsage.sessionKey` | (prázdné) | Session cookie z prohlížeče |
-| `claudeUsage.refreshInterval` | `5` | Interval obnovení dat v minutách (1-60) |
+| Setting | Default | Description |
+|---------|---------|-------------|
+| `claudeUsage.authMethod` | `auto` | `auto` = OAuth + fallback to cookie, `cookie` = cookie only |
+| `claudeUsage.sessionKey` | (empty) | Session cookie from browser |
+| `claudeUsage.refreshInterval` | `5` | Data refresh interval in minutes (1-60) |
 
-## Příkazy
+## Commands
 
-Otevři Command Palette (`Ctrl+Shift+P`):
+Open Command Palette (`Ctrl+Shift+P`):
 
-- **Claude Usage: Refresh** - ručně obnoví data
-- **Claude Usage: Set Session Key** - nastaví session cookie
+- **Claude Usage: Refresh** - manually refresh data
+- **Claude Usage: Set Session Key** - set session cookie
 
-## Vývoj
+## Development
 
-### Struktura projektu
+### Project Structure
 
 ```
 vsc-claude-limits/
 ├── src/
-│   ├── extension.ts    # Vstupní bod, aktivace, polling
-│   ├── api.ts          # API klient (OAuth + web cookie)
-│   └── statusBar.ts    # Status bar UI, formátování, barvy
-├── out/                # Zkompilovaný JavaScript (generováno)
-├── package.json        # Manifest rozšíření
-└── tsconfig.json       # TypeScript konfigurace
+│   ├── extension.ts    # Entry point, activation, polling
+│   ├── api.ts          # API client (OAuth + web cookie)
+│   └── statusBar.ts    # Status bar UI, formatting, colors
+├── out/                # Compiled JavaScript (generated)
+├── package.json        # Extension manifest
+└── tsconfig.json       # TypeScript configuration
 ```
 
-### Užitečné příkazy
+### Useful Commands
 
 ```bash
-# Kompilace
+# Compile
 npm run compile
 
-# Kompilace s automatickým sledováním změn
+# Compile with file watching
 npm run watch
 
-# Zabalení do .vsix
+# Package as .vsix
 npx @vscode/vsce package --allow-missing-repository
 
-# Instalace do VS Code
+# Install in VS Code
 code --install-extension claude-usage-limits-0.1.0.vsix
 ```
 
-### Testování při vývoji
+### Testing During Development
 
-1. Otevři projekt ve VS Code
-2. Stiskni `F5` → spustí se nové okno VS Code s rozšířením
-3. Uprav kód, ulož, restartuj debug session (`Ctrl+Shift+F5`)
+1. Open the project in VS Code
+2. Press `F5` → a new VS Code window will launch with the extension
+3. Edit code, save, restart debug session (`Ctrl+Shift+F5`)
 
-### Po úpravách - nová verze
+### After Changes - New Version
 
-1. Uprav číslo verze v `package.json` (`"version": "0.2.0"`)
-2. Zkompiluj a zabal:
+1. Update the version number in `package.json` (`"version": "0.2.0"`)
+2. Compile and package:
    ```bash
    npm run compile
    npx @vscode/vsce package --allow-missing-repository
    ```
-3. Nainstaluj nový `.vsix`:
+3. Install the new `.vsix`:
    ```bash
    code --install-extension claude-usage-limits-0.2.0.vsix
    ```
 
-## Odinstalace
+## Uninstall
 
 ```bash
 code --uninstall-extension claude-usage-limits
 ```
 
-Nebo přes VS Code: `Ctrl+Shift+X` → najdi "Claude Usage Limits" → **Uninstall**.
+Or via VS Code: `Ctrl+Shift+X` → find "Claude Usage Limits" → **Uninstall**.
