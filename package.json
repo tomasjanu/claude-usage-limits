@@ -3,6 +3,13 @@
   "displayName": "Claude Usage Limits",
   "description": "Shows Claude.ai usage limits in the VS Code status bar",
   "version": "0.1.0",
+  "author": "Tomas Janu",
+  "publisher": "tomasjanu",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/tomasjanu/claude-usage-limits"
+  },
   "engines": {
     "vscode": "^1.85.0"
   },
