@@ -94,11 +94,14 @@ export class FileMonitor implements vscode.Disposable {
 
     try {
       const message = fs.readFileSync(filePath, "utf8").trim();
+      if (!message) {
+        return;
+      }
+
+      // Clear the file first to prevent re-triggering
+      fs.writeFileSync(filePath, "", "utf8");
 
       if (type === "notify") {
-        if (!message) {
-          return;
-        }
         if (config.get<boolean>("onQuestion", true)) {
           playSound("question");
           vscode.window.showWarningMessage(`Claude Code: ${message}`);
@@ -106,13 +109,9 @@ export class FileMonitor implements vscode.Disposable {
       } else {
         if (config.get<boolean>("onTaskComplete", true)) {
           playSound("taskComplete");
-          const label = message || "Task complete";
-          vscode.window.showInformationMessage(`Claude Code: ${label}`);
+          vscode.window.showInformationMessage(`Claude Code: ${message}`);
         }
       }
-
-      // Clear the file after handling
-      fs.writeFileSync(filePath, "", "utf8");
     } catch {
       // ignore read/write errors
     }
