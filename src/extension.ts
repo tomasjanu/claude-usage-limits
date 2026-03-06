@@ -1,8 +1,12 @@
 import * as vscode from "vscode";
 import { fetchUsage } from "./api";
 import { StatusBarManager } from "./statusBar";
+import { TerminalMonitor } from "./terminalMonitor";
+import { FileMonitor } from "./fileMonitor";
 
 let statusBar: StatusBarManager;
+let terminalMonitor: TerminalMonitor;
+let fileMonitor: FileMonitor;
 let timer: ReturnType<typeof setInterval> | undefined;
 
 async function refresh(): Promise<void> {
@@ -36,6 +40,12 @@ function stopPolling(): void {
 export function activate(context: vscode.ExtensionContext): void {
   statusBar = new StatusBarManager();
   context.subscriptions.push({ dispose: () => statusBar.dispose() });
+
+  terminalMonitor = new TerminalMonitor();
+  context.subscriptions.push(terminalMonitor);
+
+  fileMonitor = new FileMonitor();
+  context.subscriptions.push(fileMonitor);
 
   // Register commands
   context.subscriptions.push(

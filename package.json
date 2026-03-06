@@ -2,7 +2,7 @@
   "name": "claude-usage-limits",
   "displayName": "Claude Usage Limits",
   "description": "Shows Claude.ai usage limits in the VS Code status bar",
-  "version": "0.1.3",
+  "version": "0.2.1",
   "author": "Tomas Janu",
   "publisher": "tomasjanu",
   "license": "MIT",
@@ -12,7 +12,7 @@
     "url": "https://github.com/tomasjanu/claude-usage-limits"
   },
   "engines": {
-    "vscode": "^1.85.0"
+    "vscode": "^1.93.0"
   },
   "categories": ["Other"],
   "activationEvents": ["onStartupFinished"],
@@ -52,6 +52,21 @@
           "minimum": 1,
           "maximum": 60,
           "description": "Refresh interval in minutes"
+        },
+        "claudeUsage.notificationSound.enabled": {
+          "type": "boolean",
+          "default": false,
+          "description": "Play a sound when Claude Code asks a question or finishes a task in the terminal"
+        },
+        "claudeUsage.notificationSound.onQuestion": {
+          "type": "boolean",
+          "default": true,
+          "description": "Play a sound when Claude Code asks for user input (e.g. tool approval)"
+        },
+        "claudeUsage.notificationSound.onTaskComplete": {
+          "type": "boolean",
+          "default": true,
+          "description": "Play a sound when Claude Code finishes a task (command exits)"
         }
       }
     }
