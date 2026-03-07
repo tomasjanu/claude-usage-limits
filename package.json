@@ -26,6 +26,10 @@
       {
         "command": "jeanClaude.setSessionKey",
         "title": "Jean Claude: Set Session Key"
+      },
+      {
+        "command": "jeanClaude.setupNotifications",
+        "title": "Jean Claude: Setup Notifications"
       }
     ],
     "configuration": {

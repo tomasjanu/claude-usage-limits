@@ -51,25 +51,64 @@ function httpsGet(
   });
 }
 
-function getOAuthToken(): string | null {
-  // Try Claude Code credentials file
-  const credentialsPath = path.join(os.homedir(), ".claude", ".credentials.json");
+const CREDENTIALS_PATH = path.join(os.homedir(), ".claude", ".credentials.json");
+
+function readCredentials(): Record<string, unknown> | null {
   try {
-    if (fs.existsSync(credentialsPath)) {
-      const content = fs.readFileSync(credentialsPath, "utf-8");
-      const creds = JSON.parse(content);
-      // The file may have different structures
-      if (creds.claudeAiOauth?.accessToken) {
-        return creds.claudeAiOauth.accessToken;
-      }
-      if (creds.accessToken) {
-        return creds.accessToken;
-      }
+    if (fs.existsSync(CREDENTIALS_PATH)) {
+      return JSON.parse(fs.readFileSync(CREDENTIALS_PATH, "utf-8"));
     }
   } catch {
     // ignore parse errors
   }
   return null;
+}
+
+function refreshViaClaudeCode(): Promise<void> {
+  const { execFile } = require("child_process") as typeof import("child_process");
+  return new Promise((resolve, reject) => {
+    execFile("claude", ["--version"], { timeout: 15000 }, (err) => {
+      if (err) {
+        reject(new Error("Failed to refresh token via Claude Code"));
+      } else {
+        resolve();
+      }
+    });
+  });
+}
+
+async function getOAuthToken(): Promise<string | null> {
+  const creds = readCredentials();
+  if (!creds) {
+    return null;
+  }
+
+  const oauth = creds.claudeAiOauth as Record<string, unknown> | undefined;
+  if (!oauth?.accessToken) {
+    // Try flat structure
+    return (creds.accessToken as string) || null;
+  }
+
+  // Check if token is expired or about to expire (5 min buffer)
+  const expiresAt = oauth.expiresAt as number | undefined;
+  if (expiresAt && expiresAt - Date.now() < 5 * 60 * 1000) {
+    const rt = oauth.refreshToken as string | undefined;
+    if (rt) {
+      try {
+        await refreshViaClaudeCode();
+        // Re-read credentials after Claude Code refreshed them
+        const updated = readCredentials();
+        const updatedOauth = (updated?.claudeAiOauth as Record<string, unknown>) || null;
+        if (updatedOauth?.accessToken) {
+          return updatedOauth.accessToken as string;
+        }
+      } catch {
+        // Refresh failed, return expired token and let caller handle the error
+      }
+    }
+  }
+
+  return oauth.accessToken as string;
 }
 
 export async function fetchUsageOAuth(token: string): Promise<UsageData> {
@@ -112,7 +151,7 @@ export async function fetchUsage(
 ): Promise<UsageData> {
   if (authMethod === "auto") {
     // Try OAuth first
-    const token = getOAuthToken();
+    const token = await getOAuthToken();
     if (token) {
       try {
         return await fetchUsageOAuth(token);

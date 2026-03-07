@@ -11,6 +11,7 @@ Displays your current Claude.ai usage limits directly in the VS Code status bar 
 - **7d** - weekly usage across all models (%)
 - Color coding: green (<50%), yellow (50-80%), red (>80%)
 - Tooltip with detailed breakdown (Sonnet, Opus, reset times)
+- Automatic OAuth token refresh when expired (via Claude Code CLI)
 
 ### Notification Sounds
 - Plays a sound when Claude Code **asks a question** (tool approval, user input)
@@ -19,15 +20,25 @@ Displays your current Claude.ai usage limits directly in the VS Code status bar 
 
 ## Installation
 
-### From .vsix file
+Pick one of the following options:
+
+| # | Option | When to use |
+|---|--------|-------------|
+| **A** | [Download .vsix from Releases](#a-download-vsix-from-releases) | Easiest — just download and install |
+| **B** | [Build .vsix from source](#b-build-vsix-from-source) | You want the latest code or no release is available |
+| **C** | [Symlink from source](#c-symlink-from-source) | For development — edit, recompile, reload without re-packaging |
+
+---
+
+### A) Download .vsix from Releases
 
 1. Download the `.vsix` file from [Releases](https://github.com/xaos-lab/jean-claude/releases)
-2. Open VS Code
-3. `Ctrl+Shift+X` (Extensions) → click `...` in the top right → **"Install from VSIX..."**
-4. Select the downloaded `.vsix` file
-5. Restart VS Code (`Ctrl+Shift+P` → "Reload Window")
+2. In VS Code: `Ctrl+Shift+X` (Extensions) → `...` → **"Install from VSIX..."** → select the file
+3. Reload VS Code (`Ctrl+Shift+P` → "Reload Window")
 
-### From source
+---
+
+### B) Build .vsix from source
 
 ```bash
 git clone https://github.com/xaos-lab/jean-claude.git
@@ -37,9 +48,11 @@ npm run compile
 npx @vscode/vsce package
 ```
 
-Then install the generated `.vsix` file as described above.
+This creates a `.vsix` file in the project folder. Then install it the same way as in **A)**.
 
-### Install from local folder (without .vsix)
+---
+
+### C) Symlink from source
 
 1. Clone and compile:
    ```bash
@@ -59,36 +72,38 @@ Then install the generated `.vsix` file as described above.
      ```
 3. Restart VS Code
 
-The extension will load directly from the source folder. After making changes, run `npm run compile` and reload VS Code.
+After making changes, run `npm run compile` and reload VS Code.
 
-## Authentication Setup
+## Setup
 
-The extension needs access to your Claude.ai account for the usage monitor.
+### 1. Authentication (usage monitor)
 
-### 1. Automatic detection (default)
+**If you have Claude Code installed** — nothing to do. The extension automatically reads the OAuth token from `~/.claude/.credentials.json` and refreshes it when expired.
 
-If you have **Claude Code** installed, the extension will automatically find the OAuth token from `~/.claude/.credentials.json`. No configuration needed.
-
-### 2. Session cookie from browser
-
-If automatic detection doesn't work:
+**If automatic detection doesn't work** — set the session cookie manually:
 
 1. Open https://claude.ai and log in
-2. Open DevTools (`F12`) → **Application** → **Cookies** → `https://claude.ai`
-3. Copy the `sessionKey` cookie value (starts with `sk-ant-sid01-...`)
-4. In VS Code: `Ctrl+Shift+P` → **"Jean Claude: Set Session Key"** → paste
+2. DevTools (`F12`) → **Application** → **Cookies** → `https://claude.ai`
+3. Copy the `sessionKey` value (starts with `sk-ant-sid01-...`)
+4. Either:
+   - `Ctrl+Shift+P` → **"Jean Claude: Set Session Key"** → paste
+   - Or add to `settings.json`: `"jeanClaude.sessionKey": "sk-ant-sid01-..."`
 
-> **Note:** The session cookie expires periodically.
+> **Note:** The session cookie expires periodically. OAuth (automatic) is preferred.
 
-## Notification Sound Setup
+### 2. Notification sounds (optional)
 
-### 1. Enable in VS Code settings
+Plays a sound when Claude Code asks a question or finishes a task.
 
-Set `jeanClaude.notificationSound.enabled` to `true`.
+**Quickest way:** `Ctrl+Shift+P` → **"Jean Claude: Setup Notifications"** — this enables the setting and adds the required hooks to `~/.claude/settings.json` automatically.
 
-### 2. Configure Claude Code hooks
+**Manual setup** — if you prefer to do it yourself:
 
-Add the following to your `~/.claude/settings.json` (or project-level `.claude/settings.local.json`):
+**A) Enable in VS Code settings:**
+- `Ctrl+,` → search `jeanClaude.notificationSound.enabled` → check the box
+- Or add to your `settings.json`: `"jeanClaude.notificationSound.enabled": true`
+
+**B) Add Claude Code hooks** to `~/.claude/settings.json` (or project-level `.claude/settings.local.json`):
 
 ```json
 {
@@ -127,15 +142,11 @@ Add the following to your `~/.claude/settings.json` (or project-level `.claude/s
 }
 ```
 
-> **Note:** `PermissionRequest` is needed for the **VS Code extension** (Claude Code agent). `Notification` covers all CLI notifications (permission prompts, idle state, etc.). Both are included for full coverage.
+These hooks write trigger files that the extension watches. Without them, sounds only work for Claude Code CLI in the VS Code terminal (via built-in terminal monitoring), but **not** for the Claude Code VS Code extension or external terminals.
 
-### How it works
-
-The extension uses three detection mechanisms:
-
-- **Terminal Monitor** - watches for `claude` commands in VS Code terminal via Shell Integration API, reads output in real-time and detects question patterns. Works automatically with Claude Code CLI.
-- **File Monitor** - watches trigger files in `~/.claude/` (`claude-notify`, `claude-stop`). Works with Claude Code hooks (`PermissionRequest`, `Notification`, `Stop`).
-- **Hooks** - `PermissionRequest` hook fires when a permission dialog appears in VS Code extension; `Notification` hooks fire for CLI permission prompts and idle state.
+> `PermissionRequest` — fires when the VS Code extension shows a permission dialog.
+> `Notification` — fires for CLI permission prompts and idle state.
+> `Stop` — fires when Claude finishes a task.
 
 ## Extension Settings
 
@@ -147,6 +158,8 @@ Open Settings (`Ctrl+,`) and search for "Jean Claude":
 | `jeanClaude.sessionKey` | (empty) | Session cookie from browser |
 | `jeanClaude.refreshInterval` | `5` | Data refresh interval in minutes (1-60) |
 | `jeanClaude.notificationSound.enabled` | `false` | Enable notification sounds |
+| `jeanClaude.notificationSound.sound` | `icq` | Which sound to play (`icq` or `pop`) |
+| `jeanClaude.notificationSound.showNotification` | `true` | Show Windows toast notification + flash taskbar when VS Code is not focused |
 | `jeanClaude.notificationSound.onQuestion` | `true` | Sound when Claude asks for input |
 | `jeanClaude.notificationSound.onTaskComplete` | `true` | Sound when Claude finishes a task |
 
@@ -156,6 +169,7 @@ Open Command Palette (`Ctrl+Shift+P`):
 
 - **Jean Claude: Refresh** - manually refresh usage data
 - **Jean Claude: Set Session Key** - set session cookie
+- **Jean Claude: Setup Notifications** - enable notification sounds and add hooks to `~/.claude/settings.json`
 
 ## Development
 
@@ -165,7 +179,7 @@ Open Command Palette (`Ctrl+Shift+P`):
 jean-claude/
 ├── src/
 │   ├── extension.ts        # Entry point, activation, polling
-│   ├── api.ts              # API client (OAuth + web cookie)
+│   ├── api.ts              # API client (OAuth + web cookie, token refresh)
 │   ├── statusBar.ts        # Status bar UI, formatting, colors
 │   ├── terminalMonitor.ts  # Terminal output watcher for Claude CLI
 │   ├── fileMonitor.ts      # Trigger file watcher for hooks

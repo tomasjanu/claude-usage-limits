@@ -1,4 +1,7 @@
 import * as vscode from "vscode";
+import * as fs from "fs";
+import * as path from "path";
+import * as os from "os";
 import { fetchUsage } from "./api";
 import { StatusBarManager } from "./statusBar";
 import { TerminalMonitor } from "./terminalMonitor";
@@ -72,6 +75,64 @@ export function activate(context: vscode.ExtensionContext): void {
         statusBar.showLoading();
         await refresh();
       }
+    })
+  );
+
+  context.subscriptions.push(
+    vscode.commands.registerCommand("jeanClaude.setupNotifications", async () => {
+      const settingsPath = path.join(os.homedir(), ".claude", "settings.json");
+
+      let settings: Record<string, unknown> = {};
+      try {
+        if (fs.existsSync(settingsPath)) {
+          settings = JSON.parse(fs.readFileSync(settingsPath, "utf-8"));
+        }
+      } catch {
+        // ignore parse errors, start fresh
+      }
+
+      const hooks = (settings.hooks || {}) as Record<string, unknown>;
+
+      const requiredHooks: Record<string, { command: string }[]> = {
+        PermissionRequest: [
+          { command: 'echo "Permission needed" > ~/.claude/claude-notify' },
+        ],
+        Notification: [
+          { command: 'echo "$CLAUDE_NOTIFICATION" > ~/.claude/claude-notify' },
+        ],
+        Stop: [
+          { command: "echo done > ~/.claude/claude-stop" },
+        ],
+      };
+
+      let changed = false;
+      for (const [event, hookEntries] of Object.entries(requiredHooks)) {
+        if (!hooks[event]) {
+          hooks[event] = [
+            { hooks: hookEntries.map((h) => ({ type: "command", command: h.command })) },
+          ];
+          changed = true;
+        }
+      }
+
+      if (changed) {
+        settings.hooks = hooks;
+        const claudeDir = path.join(os.homedir(), ".claude");
+        if (!fs.existsSync(claudeDir)) {
+          fs.mkdirSync(claudeDir, { recursive: true });
+        }
+        fs.writeFileSync(settingsPath, JSON.stringify(settings, null, 2), "utf-8");
+      }
+
+      // Enable notification sound setting
+      const config = vscode.workspace.getConfiguration("jeanClaude");
+      await config.update("notificationSound.enabled", true, vscode.ConfigurationTarget.Global);
+
+      vscode.window.showInformationMessage(
+        changed
+          ? "Notifications enabled! Claude hooks added to ~/.claude/settings.json."
+          : "Notifications enabled! Claude hooks were already configured."
+      );
     })
   );
 
