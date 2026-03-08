@@ -155,8 +155,14 @@ export async function fetchUsage(
     if (token) {
       try {
         return await fetchUsageOAuth(token);
-      } catch {
+      } catch (oauthErr) {
         // Fall through to cookie method
+        console.warn("OAuth usage fetch failed:", oauthErr);
+        if (!sessionKey) {
+          throw new Error(
+            `OAuth token found but API call failed: ${oauthErr instanceof Error ? oauthErr.message : oauthErr}. Check your connection or try re-authenticating Claude Code.`
+          );
+        }
       }
     }
     // Fall back to session cookie if provided
